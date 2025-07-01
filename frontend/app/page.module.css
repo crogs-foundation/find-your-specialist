@@ -1,0 +1,63 @@
+.page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.header {
+  font-size: 5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 5rem;
+}
+
+.bigLink {
+  font-size: 1.75rem;
+  color: var(--matrix-primary);
+  border: 1px solid var(--matrix-primary);
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: background 0.3s, color 0.3s;
+}
+
+.bigLink:hover {
+  background: var(--matrix-primary);
+  color: var(--background);
+}
+
+.authors {
+  margin-top: 2rem;
+  font-size: 1rem;
+  color: var(--foreground);
+  opacity: 0.8;
+  text-align: center;
+}
+
+.githubLink {
+  position: absolute;
+  bottom: 1rem;
+  right: 1.5rem;
+  font-size: 1.2rem;
+  color: var(--matrix-primary);
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.githubLink:hover {
+  opacity: 1;
+}
