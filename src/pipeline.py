@@ -1,6 +1,7 @@
 import typing
 
 from src.rag import RetrievalAugmentedGeneration
+from src.types import Context
 
 # from src.rag_local import RetrievalAugmentedGenerationLocal
 
@@ -22,47 +23,33 @@ ApiModel = typing.Literal[
 
 LocalModel = typing.Literal["arnir0/Tiny-LLM", "sshleifer/tiny-gpt2"]
 
-Specialist = typing.Literal["lawyer", "chef", "psychologist"]
-
-SpecialistContext: dict[Specialist, str] = {
-    "lawyer": "You are professional Russian lawyer. You purpose is to help user in law questions. \
-        The user can ask you about any law related questions (in Russia), and you should answer \
-        in Russian with as much references as possible. If the question is unrelated to law,\
-        answer 'Sorry, the question is unrelated' ",
-    "chef": "You are professional chef or cook. You purpose is to help user in cooking questions. \
-        The user can ask you about any cooking related questions (in Russia), and you should answer \
-        in Russian with as much references as possible. If the question is unrelated to cooking,\
-        answer 'Sorry, the question is unrelated' ",
-    "psychologist": "You are professional psychologist. You purpose is to help user in psychological questions. \
-        The user can ask you about any psychology related questions (in Russia), and you should answer \
-        in Russian with as much references as possible. If the question is unrelated to psychology,\
-        answer 'Sorry, the question is unrelated' ",
-}
-
 
 class RAGPipeline:
     _available_api_models: list[ApiModel] = list(typing.get_args(ApiModel))
     # _available_local_models: list[LocalModel] = list(typing.get_args(LocalModel))
     _available_local_models: list[LocalModel] = []
-    _available_specialists: list[Specialist] = list(typing.get_args(Specialist))
 
-    def __init__(self) -> None:
+    def __init__(self, context: Context) -> None:
         self.rag = RetrievalAugmentedGeneration()
-        # self.rag_local = RetrievalAugmentedGenerationLocal()
+        self.context = context
+        self._available_specialists: list[str] = list(self.context.keys())
 
     def request(
         self,
         query: str,
         model: ApiModel | LocalModel,
-        specialist: Specialist,
+        specialist: str,
     ):
         if specialist not in self._available_specialists:
             raise RuntimeError(f"Unknown specialist '{specialist}'")
 
-        context = SpecialistContext.get(specialist, "")
+        try:
+            specialist_context = self.context[specialist]
+        except KeyError:
+            raise RuntimeError(f"No context found for specialist '{specialist}'")
 
         if model in self._available_api_models:
-            return self.rag.generate_stream(query, model, context)
+            return self.rag.generate_stream(query, model, specialist_context["prompt"])
         elif model in self._available_local_models:
             # return self.rag_local.generate_stream(query, model, context)
             raise NotImplementedError("RAG local not implemented yet")
@@ -74,14 +61,20 @@ class RAGPipeline:
         self,
         query: str,
         model: ApiModel | LocalModel,
-        specialist: Specialist,
+        specialist: str,
     ) -> str:
         if specialist not in self._available_specialists:
             raise RuntimeError(f"Unknown specialist '{specialist}'")
 
-        context = SpecialistContext.get(specialist, "")
+        try:
+            specialist_context = self.context[specialist]
+        except KeyError:
+            raise RuntimeError(f"No context found for specialist '{specialist}'")
+
         if model in self._available_api_models:
-            return await self.rag.get_answer_async(query, model, context)  # type: ignore
+            return await self.rag.get_answer_async(
+                query, model, specialist_context["prompt"]
+            )  # type: ignore
         elif model in self._available_local_models:
             # return self.rag_local.get_answer_async(query, model, context)
             raise NotImplementedError("RAG local not implemented yet")
@@ -94,5 +87,8 @@ class RAGPipeline:
         return self._available_api_models + self._available_local_models
 
     @property
-    def available_specialists(self) -> list[Specialist]:
-        return self._available_specialists
+    def available_specialists(self) -> list[dict]:
+        return [
+            {"id": k, "opened": v["opened"], "label": v["label"]}
+            for k, v in self.context.items()
+        ]

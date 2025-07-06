@@ -40,6 +40,13 @@
   color: var(--background);
 }
 
+.disabledLink {
+  pointer-events: none;
+  background: rgba(128, 128, 128, 0.5);
+  color: #000000;
+  border: 1px solid #000000;
+}
+
 .authors {
   margin-top: 2rem;
   font-size: 1rem;

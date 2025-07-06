@@ -6,17 +6,21 @@ import axios from "axios";
 import { useRef } from "react";
 import Dropdown from '@/components/Dropdown';
 import BackLink from "@/components/BackLink";
-import { indexerMap as specialistMap, THINK_REGEX } from "@/constants";
+import { THINK_REGEX } from "@/constants";
 
 
-
+type Specialist = {
+    id: string,
+    label: string,
+    opened: string
+}
 
 export default function ChatPage() {
     const [prompt, setPrompt] = useState("");
     const [model, setModel] = useState("");
     const [modelList, setModelList] = useState<string[]>([]);
     const [specialist, setSpecialist] = useState("");
-    const [specialistList, setSpecialistList] = useState<string[]>([]);
+    const [specialistList, setSpecialistList] = useState<Specialist[]>([]);
     const [messages, setMessages] = useState<{ role: string; content: string; time: number | undefined }[]>([]);
     const [streamingResponse, setStreamingResponse] = useState("");
     const [error, setError] = useState("");
@@ -48,11 +52,11 @@ export default function ChatPage() {
                 setError("Unable to load model list");
             }
         };
-        const fetchIndexers = async () => {
+        const fetchSpecialists = async () => {
             try {
                 const response = await axios.get(`${process.env.API_URL}/specialists`);
                 setSpecialistList(response.data || []);
-                if (response.data.length > 0) setSpecialist(response.data[0]); // default to first
+                if (response.data.length > 0) setSpecialist(response.data[0].id); // default to first
             } catch (err) {
                 console.error("Failed to fetch specialists", err);
                 setError("Unable to load specialists list");
@@ -60,7 +64,7 @@ export default function ChatPage() {
         };
 
 
-        fetchIndexers();
+        fetchSpecialists();
         fetchModels();
     }, []);
 
@@ -154,7 +158,7 @@ export default function ChatPage() {
                     onChange={(newValue) => setModel(newValue)}
                 />
                 <Dropdown
-                    options={specialistList.map(value => ({ value: value, label: specialistMap.get(value)! }))}
+                    options={specialistList.map(x => ({ value: x.id, label: x.label, locked: !x.opened }))}
                     value={specialist}
                     onChange={(newValue) => setSpecialist(newValue)}
                 />

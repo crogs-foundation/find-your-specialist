@@ -1,14 +1,20 @@
+from pathlib import Path
+
 import uvicorn
 from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from src.pipeline import ApiModel, LocalModel, RAGPipeline, Specialist
+from src.pipeline import ApiModel, LocalModel, RAGPipeline
+from src.utils import load_json
 
 CONFIG = dotenv_values(".env")
+CONTEXT_PATH = Path("./prompts.json")
+if not CONTEXT_PATH.exists():
+    raise RuntimeError(f"Context '{CONTEXT_PATH}' does not exist")
+RAG_PIPELINE = RAGPipeline(load_json(CONTEXT_PATH))
 
-RAG_PIPELINE = RAGPipeline()
 
 app = FastAPI()
 
@@ -33,7 +39,7 @@ async def get_llm_list():
 
 
 @app.get("/chat")
-async def chat(prompt: str, model: ApiModel | LocalModel, specialist: Specialist):
+async def chat(prompt: str, model: ApiModel | LocalModel, specialist: str):
     try:
         return StreamingResponse(
             RAG_PIPELINE.request(prompt, model, specialist),

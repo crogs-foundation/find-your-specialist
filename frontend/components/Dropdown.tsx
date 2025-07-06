@@ -5,6 +5,7 @@ import styles from './Dropdown.module.css';
 interface DropdownOption {
     value: string;
     label: string;
+    locked?: boolean;
 }
 
 interface DropdownProps {
@@ -25,12 +26,21 @@ export default function Dropdown({
             <div className={styles.selectWrapper}>
                 <select
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => {
+                        const selected = options.find(opt => opt.value === e.target.value);
+                        if (!selected?.locked) onChange(e.target.value);
+                    }}
                     className={styles.select}
                 >
                     {options.map((option) => (
-                        <option key={option.value} value={option.value}>
-                            {option.label}
+                        <option
+                            key={option.value}
+                            value={option.value}
+                            disabled={option.locked}
+                            className={`${styles.option} ${option.locked ? styles.lockedOption : ''}`}
+                            title={option.locked ? 'Upgrade to premium' : ''}
+                        >
+                            {option.locked ? `🔒 ${option.label}` : option.label}
                         </option>
                     ))}
                 </select>

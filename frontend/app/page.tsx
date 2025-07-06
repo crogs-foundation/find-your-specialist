@@ -16,6 +16,11 @@ export default function Home() {
           Start chatting
         </Link>
 
+        <Link href="/" className={`${styles.bigLink} ${styles.disabledLink}`} aria-disabled={true}
+          tabIndex={-1}>
+          Buy Premium
+        </Link>
+
         <p className={styles.authors}>Powered by Crogs Foundation</p>
       </div>
 
