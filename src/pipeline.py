@@ -10,15 +10,15 @@ PipelineOutput = tuple[
 ]  # (spell correction, [(doc path, score)])
 
 ApiModel = typing.Literal[
-    "qwen-2-72b",
+    "command-r",
+    "evil",
     "gpt-4o",
+    "qwen-3-8b",
     "wizardlm-2-7b",
     "wizardlm-2-8x22b",
     "dolphin-2.6",
     "dolphin-2.9",
     "glm-4",
-    "evil",
-    "command-r",
 ]
 
 LocalModel = typing.Literal["arnir0/Tiny-LLM", "sshleifer/tiny-gpt2"]
