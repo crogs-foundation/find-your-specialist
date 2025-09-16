@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import uvicorn
@@ -10,6 +11,7 @@ from src.pipeline import ApiModel, LocalModel, RAGPipeline
 from src.utils import load_json
 
 CONFIG = dotenv_values(".env")
+DEBUG = bool(os.environ.get("DEBUG"))
 CONTEXT_PATH = Path("./prompts.json")
 if not CONTEXT_PATH.exists():
     raise RuntimeError(f"Context '{CONTEXT_PATH}' does not exist")
@@ -56,6 +58,6 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=int(CONFIG["BACKEND_PORT"] or 8000),
-        reload=bool(CONFIG["DEBUG"]),
-        log_level="info" if bool(CONFIG["DEBUG"]) else "warning",
+        reload=DEBUG,
+        log_level="info" if DEBUG else "warning",
     )
