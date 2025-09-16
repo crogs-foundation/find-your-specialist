@@ -84,8 +84,9 @@ export default function ChatPage() {
 
         try {
             const currentModel = model;
+
             const response = await fetch(
-                `${process.env.API_URL}/chat?prompt=${encodeURIComponent(currentPrompt)}&model=${model}&specialist=${specialist}`,
+                `api/chat?prompt=${encodeURIComponent(currentPrompt)}&model=${model}&specialist=${specialist}`,
             );
 
             if (!response.ok || !response.body) {
