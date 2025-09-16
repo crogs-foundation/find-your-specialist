@@ -44,7 +44,8 @@ export default function ChatPage() {
     useEffect(() => {
         const fetchModels = async () => {
             try {
-                const response = await axios.get(`${process.env.API_URL}/models`);
+                // const response = await axios.get(`${process.env.API_URL}/models`);
+                const response = await axios.get(`api/models`);
                 setModelList(response.data || []);
                 if (response.data.length > 0) setModel(response.data[0]); // default to first
             } catch (err) {
@@ -54,7 +55,7 @@ export default function ChatPage() {
         };
         const fetchSpecialists = async () => {
             try {
-                const response = await axios.get(`${process.env.API_URL}/specialists`);
+                const response = await axios.get(`api/specialists`);
                 setSpecialistList(response.data || []);
                 if (response.data.length > 0) setSpecialist(response.data[0].id); // default to first
             } catch (err) {

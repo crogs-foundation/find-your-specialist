@@ -13,6 +13,12 @@ dependencies = [
     "ruff>=0.12.1",
 ]
 
+
+
+[tool.taskipy.tasks] # uv run task <name>
+prod = "uv run main.py"
+dev = "export DEBUG=1 && uv run main.py"
+
 [tool.ruff]
 extend-include = ["*.ipynb"]
 extend-select = ["I"]
@@ -28,3 +34,8 @@ torch = [
 name = "pytorch-cu118"
 url = "https://download.pytorch.org/whl/cu118"
 explicit = true
+
+[dependency-groups]
+dev = [
+    "taskipy>=1.14.1",
+]
