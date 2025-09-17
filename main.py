@@ -46,6 +46,11 @@ async def chat(prompt: str, model: ApiModel | LocalModel, specialist: str):
         return StreamingResponse(
             RAG_PIPELINE.request(prompt, model, specialist),
             media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
         )
     except RuntimeError as exc:
         raise HTTPException(

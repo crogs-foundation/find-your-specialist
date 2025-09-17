@@ -80,8 +80,6 @@ export default function ChatPage() {
         setError("");
         const currentPrompt = prompt;
         setPrompt("");
-        let current = "";
-
         try {
             const currentModel = model;
 
@@ -93,37 +91,50 @@ export default function ChatPage() {
                 let errorText = undefined;
                 try {
                     errorText = (await response.json()).detail;
-                }
-                catch {
-
+                } catch {
+                    // Ignore parsing errors
                 }
 
                 throw new Error(errorText || "Failed to connect to backend or response body is missing.");
             }
 
             const reader = response.body.getReader();
+            let elapsedTime: number | undefined = undefined;
             const decoder = new TextDecoder();
 
-            let elapsedTime: number | undefined = undefined
+            // Buffer to accumulate incomplete chunks
+            let buffer = "";
+            let current = ""; // This should be declared in your component's scope
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value, { stream: true });
-                const messages = chunk.split('\n\n').filter(m => m.trim() !== '');
-                for (const message of messages) {
+                // Add new data to buffer
+                buffer += decoder.decode(value, { stream: true });
+
+                // Split by double newlines to get complete messages
+                const lines = buffer.split('\n\n');
+
+                // Keep the last part as it might be incomplete
+                buffer = lines.pop() || "";
+
+                // Process all complete messages
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+
                     try {
-                        const parsed = JSON.parse(message);
+                        const parsed = JSON.parse(line);
 
                         switch (parsed.type) {
                             case 'chunk':
                                 current += parsed.data;
+                                // Update streaming response immediately for each chunk
                                 setStreamingResponse(current);
                                 break;
                             case 'complete':
                                 setStreamingResponse("");
-                                elapsedTime = parsed.data
+                                elapsedTime = parsed.data;
                                 break;
                             case 'error':
                                 setError(parsed.data || "Unknown error");
@@ -133,14 +144,46 @@ export default function ChatPage() {
                                 console.warn('Unknown message type:', parsed.type);
                         }
                     } catch (e) {
-                        console.error('Error parsing message:', e);
+                        console.error('Error parsing message:', line, e);
+                        setError("Received malformed response from server.");
                         setIsLoading(false);
                         return;
                     }
                 }
             }
+
+            // Handle any remaining data in buffer
+            if (buffer.trim()) {
+                try {
+                    const parsed = JSON.parse(buffer.trim());
+                    switch (parsed.type) {
+                        case 'chunk':
+                            current += parsed.data;
+                            setStreamingResponse(current);
+                            break;
+                        case 'complete':
+                            setStreamingResponse("");
+                            elapsedTime = parsed.data;
+                            break;
+                        case 'error':
+                            setError(parsed.data || "Unknown error");
+                            setIsLoading(false);
+                            return;
+                        default:
+                            console.warn('Unknown message type in final buffer:', parsed.type);
+                    }
+                } catch (e) {
+                    console.error('Error parsing final buffer:', buffer.trim(), e);
+                    // Don't fail on final buffer parsing error, just continue
+                }
+            }
+
             setStreamingResponse("");
-            setMessages(prev => [...prev, { role: currentModel, content: current.replace(THINK_REGEX, '').trim(), time: elapsedTime }]);
+            setMessages(prev => [...prev, {
+                role: currentModel,
+                content: current.replace(THINK_REGEX, '').trim(),
+                time: elapsedTime
+            }]);
         } catch (err) {
             console.error("Error during chat request:", err);
             setError("Error: " + (err instanceof Error ? err.message : "Unknown error"));

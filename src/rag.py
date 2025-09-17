@@ -45,13 +45,18 @@ class RetrievalAugmentedGeneration:
                     )
 
                     if chunk.choices[0].delta.content:
-                        yield (
-                            json.dumps(
-                                {"type": "chunk", "data": chunk.choices[0].delta.content}
-                            )
-                            + "\n\n"
-                        )
-                    time.sleep(delay)
+                        content = chunk.choices[0].delta.content
+                        message_dict = {"type": "chunk", "data": content}
+                        json_string = json.dumps(message_dict)
+                        # Ensure each chunk is flushed immediately
+                        yield (json_string + "\n\n").encode("utf-8")
+
+                        # Add a small delay to allow streaming
+                        time.sleep(0.01)  # Reduced delay
+
+                # Send completion message
+                yield (json.dumps({"type": "complete", "data": time.time() - start}) + "\n\n").encode("utf-8")
+
             except asyncio.TimeoutError as e:
                 raise TimeoutError("Timed out waiting for the model response") from e
             except StopAsyncIteration:
@@ -62,9 +67,7 @@ class RetrievalAugmentedGeneration:
                 loop.close()
 
         except BaseException as e:
-            yield json.dumps({"type": "error", "data": str(e)}) + "\n\n"
-
-        yield (json.dumps({"type": "complete", "data": time.time() - start}) + "\n\n")
+            yield (json.dumps({"type": "error", "data": str(e)}) + "\n\n").encode("utf-8")
 
     async def get_answer_async(self, query: str, model: str, context: str) -> SyntaxError:
         messages = [
